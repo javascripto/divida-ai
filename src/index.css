@@ -38,6 +38,10 @@
   --background: #fcf8ff;
   --on-background: #1b1b23;
   --radius: 1rem;
+  /* Fundo padrão dos cards (tema-aware). Definido como variável e aplicado
+     numa classe de @layer components para que utilities bg-* (ex.: bg-primary)
+     consigam sobrescrever em painéis coloridos, inclusive no dark mode. */
+  --card-bg: var(--surface-container-lowest);
 }
 
 .dark {
@@ -75,6 +79,7 @@
   --info: #adc1ff;
   --background: #0b0f1a;
   --on-background: #e6e7ee;
+  --card-bg: var(--surface-container);
 }
 
 @theme inline {
@@ -130,5 +135,13 @@
     color: var(--on-background);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* Fundo padrão dos cards. Em @layer components para ficar abaixo das
+     utilities — assim bg-primary/bg-secondary-container etc. sobrescrevem. */
+  .cc-surface {
+    background-color: var(--card-bg);
   }
 }

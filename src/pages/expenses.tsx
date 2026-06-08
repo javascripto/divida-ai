@@ -84,14 +84,14 @@ export function ExpensesPage() {
           const meta = categoryMeta[expense.category]
           const Icon = meta.icon
           return (
-            <Card key={expense.id} className="group flex items-center gap-4 p-4">
+            <Card key={expense.id} className="group flex items-center gap-3 p-4">
               <span className={`flex size-11 shrink-0 items-center justify-center rounded-full ${meta.tint}`}>
                 <Icon className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="truncate font-semibold">{expense.description}</h4>
-                  <Badge variant="category">{meta.label}</Badge>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <h4 className="min-w-0 truncate font-semibold">{expense.description}</h4>
+                  <Badge variant="category" className="shrink-0">{meta.label}</Badge>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-on-surface-variant">
                   <span>Pago por {nameOf(expense.paidBy)}</span>
@@ -103,28 +103,33 @@ export function ExpensesPage() {
                   </span>
                 </div>
               </div>
-              <span className="font-bold text-error">{formatMoney(expense.amount, event.currency)}</span>
-              <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Editar despesa"
-                  onClick={() => navigate(`/event/${event.id}/expenses/${expense.id}/edit`)}
-                >
-                  <Pencil className="size-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Excluir despesa"
-                  className="text-error hover:bg-error-container"
-                  onClick={() => {
-                    dispatch({ type: "DELETE_EXPENSE", eventId: event.id, expenseId: expense.id })
-                    toast.success("Despesa excluída")
-                  }}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className="whitespace-nowrap font-bold text-error">
+                  {formatMoney(expense.amount, event.currency)}
+                </span>
+                <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="size-8"
+                    aria-label="Editar despesa"
+                    onClick={() => navigate(`/event/${event.id}/expenses/${expense.id}/edit`)}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Excluir despesa"
+                    className="size-8 text-error hover:bg-error-container"
+                    onClick={() => {
+                      dispatch({ type: "DELETE_EXPENSE", eventId: event.id, expenseId: expense.id })
+                      toast.success("Despesa excluída")
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           )
