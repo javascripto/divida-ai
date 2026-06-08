@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useParams, Navigate } from "react-router-dom"
-import { ArrowRight, ChevronDown, BarChart3, RotateCcw, CheckCircle2 } from "lucide-react"
+import { ArrowRight, ChevronDown, BarChart3, RotateCcw, CheckCircle2, Copy } from "lucide-react"
 import { PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -8,9 +8,47 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { useStore } from "@/store/store"
-import { useEventSummary } from "@/hooks/use-event-summary"
+import { useEventSummary, type EventSummary } from "@/hooks/use-event-summary"
 import { formatMoney } from "@/lib/format"
+import type { AppEvent } from "@/lib/types"
 import { toast } from "sonner"
+
+// Monta um resumo em texto (estilo da saída do rateio.ts) para compartilhar.
+function buildSettlementText(event: AppEvent, summary: EventSummary): string {
+  const { settlements, balances, net, nameOf, totalSpent, expenses } = summary
+  const money = (v: number) => formatMoney(v, event.currency)
+  const lines: string[] = []
+
+  lines.push(`💰 Conta Certa — ${event.name}`)
+  lines.push(`Total gasto: ${money(totalSpent)}`)
+  lines.push("")
+
+  lines.push("📋 Despesas")
+  for (const e of expenses) {
+    const split = e.splitBetween.map(nameOf).join(", ")
+    lines.push(`• ${money(e.amount)} — ${e.description} (pago por ${nameOf(e.paidBy)}; dividido entre ${split})`)
+  }
+  lines.push("")
+
+  lines.push("🤝 Pagamentos para acertar")
+  if (settlements.length === 0) {
+    lines.push("• Nada a acertar.")
+  } else {
+    for (const s of settlements) {
+      lines.push(`• ${nameOf(s.from)} → ${nameOf(s.to)}: ${money(s.amount)}${s.paid ? " ✅ (pago)" : ""}`)
+    }
+  }
+  lines.push("")
+
+  lines.push("📊 Saldo de cada participante")
+  for (const b of balances) {
+    const value = net.get(b.participantId) ?? 0
+    const sign = value > 0 ? "+" : ""
+    lines.push(`• ${nameOf(b.participantId)}: ${sign}${money(value)}`)
+  }
+
+  return lines.join("\n")
+}
 
 export function SettlementsPage() {
   const { eventId } = useParams()
@@ -24,11 +62,28 @@ export function SettlementsPage() {
 
   const { settlements, balances, net, nameOf, isFullySettled } = summary
 
+  const handleCopy = async () => {
+    const text = buildSettlementText(event, summary)
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success("Detalhes copiados para a área de transferência")
+    } catch {
+      toast.error("Não foi possível copiar")
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="Pagamentos para acertar"
         subtitle="Revise e confirme as dívidas entre os membros do grupo."
+        actions={
+          settlements.length > 0 && (
+            <Button variant="tonal" onClick={handleCopy}>
+              <Copy className="size-4" /> Copiar detalhes
+            </Button>
+          )
+        }
       />
 
       {isFullySettled && (
