@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Conta Certa design tokens (light) — from DESIGN.md */
+  --surface: #fcf8ff;
+  --surface-dim: #dbd8e4;
+  --surface-bright: #fcf8ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f5f2fe;
+  --surface-container: #efecf8;
+  --surface-container-high: #e9e6f3;
+  --surface-container-highest: #e4e1ed;
+  --on-surface: #1b1b23;
+  --on-surface-variant: #464554;
+  --inverse-surface: #303038;
+  --inverse-on-surface: #f2effb;
+  --outline: #767586;
+  --outline-variant: #c7c4d7;
+  --primary: #4648d4;
+  --on-primary: #ffffff;
+  --primary-container: #6063ee;
+  --on-primary-container: #fffbff;
+  --primary-fixed: #e1e0ff;
+  --secondary: #006c49;
+  --on-secondary: #ffffff;
+  --secondary-container: #6cf8bb;
+  --on-secondary-container: #00714d;
+  --tertiary: #6b38d4;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #8455ef;
+  --error: #ba1a1a;
+  --on-error: #ffffff;
+  --error-container: #ffdad6;
+  --on-error-container: #93000a;
+  --info: #3b5bdb;
+  --background: #fcf8ff;
+  --on-background: #1b1b23;
+  --radius: 1rem;
+}
+
+.dark {
+  /* Deep navy-gray strategy from DESIGN.md */
+  --surface: #0b0f1a;
+  --surface-dim: #0b0f1a;
+  --surface-bright: #1a1f2e;
+  --surface-container-lowest: #070a12;
+  --surface-container-low: #141824;
+  --surface-container: #181d2a;
+  --surface-container-high: #222838;
+  --surface-container-highest: #2c3344;
+  --on-surface: #e6e7ee;
+  --on-surface-variant: #c0c2cf;
+  --inverse-surface: #e6e7ee;
+  --inverse-on-surface: #1b1b23;
+  --outline: #8b8d9b;
+  --outline-variant: #3a3f4f;
+  --primary: #c0c1ff;
+  --on-primary: #07006c;
+  --primary-container: #6063ee;
+  --on-primary-container: #e1e0ff;
+  --primary-fixed: #2f2ebe;
+  --secondary: #4edea3;
+  --on-secondary: #002113;
+  --secondary-container: #005236;
+  --on-secondary-container: #6ffbbe;
+  --tertiary: #d0bcff;
+  --on-tertiary: #23005c;
+  --tertiary-container: #8455ef;
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --error-container: #93000a;
+  --on-error-container: #ffdad6;
+  --info: #adc1ff;
+  --background: #0b0f1a;
+  --on-background: #e6e7ee;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-primary-fixed: var(--primary-fixed);
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+  --color-info: var(--info);
+  --color-background: var(--background);
+  --color-on-background: var(--on-background);
+
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--outline-variant);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--on-background);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
