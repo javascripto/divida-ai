@@ -123,32 +123,30 @@ export function EventFormDialog({
               <Input id="ev-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
-          <div className="grid grid-cols-2 items-end gap-3">
-            <div className="grid gap-1.5">
-              <Label>Moeda</Label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyOptions.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-1.5">
-              <Label>Status</Label>
-              <Tabs value={status} onValueChange={(v) => setStatus(v as EventStatus)}>
-                <TabsList className="w-full">
-                  <TabsTrigger className="flex-1" value="open">Aberto</TabsTrigger>
-                  <TabsTrigger className="flex-1" value="closed">Fechado</TabsTrigger>
-                  <TabsTrigger className="flex-1" value="settled">Quitado</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+          <div className="grid gap-1.5">
+            <Label>Moeda</Label>
+            <Select value={currency} onValueChange={setCurrency}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyOptions.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Status</Label>
+            <Tabs value={status} onValueChange={(v) => setStatus(v as EventStatus)}>
+              <TabsList className="w-full">
+                <TabsTrigger className="flex-1" value="open">Aberto</TabsTrigger>
+                <TabsTrigger className="flex-1" value="closed">Fechado</TabsTrigger>
+                <TabsTrigger className="flex-1" value="settled">Quitado</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
 
