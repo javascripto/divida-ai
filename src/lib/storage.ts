@@ -49,7 +49,7 @@ export function seedState(): PersistedState {
     ],
     settledPairs: [],
   }
-  return { events: [event], settings: defaultSettings }
+  return { events: [], settings: defaultSettings }
 }
 
 export function loadState(): PersistedState {
