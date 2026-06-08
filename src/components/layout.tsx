@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate, useParams } from "react-router-dom"
+import { NavLink, useLocation, useMatch, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   CalendarDays,
@@ -26,10 +26,14 @@ const eventNav = (eventId: string) => [
 export function Layout({ children }: { children: React.ReactNode }) {
   const { events } = useStore()
   const navigate = useNavigate()
-  const params = useParams()
   const location = useLocation()
 
-  const activeEventId = params.eventId ?? events[0]?.id
+  // O Layout fica no nível da rota "*", então o parâmetro :eventId não aparece
+  // em useParams aqui — ele é casado pelo <Routes> interno. Extraímos o evento
+  // ativo do próprio caminho para que a navegação lateral aponte sempre para o
+  // evento que está sendo visualizado (e não para o primeiro da lista).
+  const eventMatch = useMatch("/event/:eventId/*")
+  const activeEventId = eventMatch?.params.eventId ?? events[0]?.id
   const items = [
     ...navItems,
     ...(activeEventId ? eventNav(activeEventId) : []),

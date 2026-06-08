@@ -24,7 +24,7 @@ const uid = () =>
 
 export const newId = uid
 
-/** Evento de exemplo (a viagem do rateio.ts original). */
+/** Estado inicial vazio (o usuário cria seus próprios eventos). */
 export function seedState(): PersistedState {
   const now = Date.now()
   const event: AppEvent = {
