@@ -93,7 +93,7 @@ export function EventFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 px-6">
+        <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto px-6">
           <div className="grid gap-1.5">
             <Label htmlFor="ev-name">Nome do evento</Label>
             <Input
@@ -113,7 +113,7 @@ export function EventFormDialog({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <Label htmlFor="ev-start">Data de início</Label>
               <Input id="ev-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
