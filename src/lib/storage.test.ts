@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { loadState, saveState, clearState, seedState, defaultSettings } from "./storage"
+import {
+  clearState,
+  defaultSettings,
+  loadState,
+  saveState,
+  seedState,
+} from "./storage"
 
 describe("storage (localStorage round-trip)", () => {
   beforeEach(() => localStorage.clear())
@@ -41,7 +47,7 @@ describe("storage (localStorage round-trip)", () => {
   })
 
   it("recupera-se de JSON corrompido voltando ao seed vazio", () => {
-    localStorage.setItem("conta-certa:state:v1", "{not valid json")
+    localStorage.setItem("divida-ai:state:v1", "{not valid json")
     const state = loadState()
     expect(state.events).toHaveLength(0)
   })
@@ -49,6 +55,6 @@ describe("storage (localStorage round-trip)", () => {
   it("clearState remove os dados", () => {
     saveState(seedState())
     clearState()
-    expect(localStorage.getItem("conta-certa:state:v1")).toBeNull()
+    expect(localStorage.getItem("divida-ai:state:v1")).toBeNull()
   })
 })

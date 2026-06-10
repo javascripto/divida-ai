@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-surface">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-outline-variant/60 bg-surface px-4 py-6 md:flex">
         <div className="px-2">
-          <h1 className="text-xl font-bold text-primary">Conta Certa</h1>
+          <h1 className="text-xl font-bold text-primary">Divida aí</h1>
           <p className="text-xs text-on-surface-variant">Assistente pessoal</p>
         </div>
 
@@ -93,10 +93,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar mobile */}
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-outline-variant/60 bg-surface/90 px-4 py-3 backdrop-blur md:hidden">
-          <NavLink to="/" className="text-lg font-bold text-primary">Conta Certa</NavLink>
-          <Button size="sm" onClick={onAddExpense}>
-            <Plus className="size-4" /> Despesa
-          </Button>
+          <NavLink to="/" className="text-lg font-bold text-primary">Divida aí</NavLink>
+          {activeEventId && (
+            <Button size="sm" onClick={onAddExpense}>
+              <Plus className="size-4" /> Despesa
+            </Button>
+          )}
         </header>
 
         <main className="flex-1 px-5 py-6 pb-24 md:px-10 md:py-8">{children}</main>

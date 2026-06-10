@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Conta Certa design tokens (light) — from DESIGN.md */
+  /* Divida aí design tokens (light) — from DESIGN.md */
   --surface: #fcf8ff;
   --surface-dim: #dbd8e4;
   --surface-bright: #fcf8ff;

@@ -1,5 +1,5 @@
 {
-  "name": "conta-certa",
+  "name": "divida-ai",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -9,6 +9,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/javascripto/divida-ai.git"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

@@ -19,7 +19,7 @@ function buildSettlementText(event: AppEvent, summary: EventSummary): string {
   const money = (v: number) => formatMoney(v, event.currency)
   const lines: string[] = []
 
-  lines.push(`💰 Conta Certa — ${event.name}`)
+  lines.push(`💰 Divida aí — ${event.name}`)
   lines.push(`Total gasto: ${money(totalSpent)}`)
   lines.push("")
 

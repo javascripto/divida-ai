@@ -1,4 +1,4 @@
-# Conta Certa
+# Divida aí
 
 App client-side de divisão de despesas. Stack: React + Vite + TypeScript + shadcn/ui + Tailwind CSS v4.
 

@@ -1,6 +1,6 @@
 import type { AppEvent } from './types';
 
-const STORAGE_KEY = 'conta-certa:state:v1';
+const STORAGE_KEY = 'divida-ai:state:v1';
 
 export type AppSettings = {
   defaultCurrency: string;

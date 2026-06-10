@@ -22,7 +22,7 @@ export function SettingsPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `conta-certa-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `divida-ai-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
     toast.success("Backup exportado")
@@ -131,7 +131,7 @@ export function SettingsPage() {
         <div>
           <p className="font-semibold text-primary">Nota de privacidade</p>
           <p className="text-sm text-on-surface-variant">
-            O Conta Certa é um app 100% local. Nenhum dado é enviado a servidores — suas informações
+            O Divida aí é um app 100% local. Nenhum dado é enviado a servidores — suas informações
             financeiras ficam apenas neste dispositivo. Exporte seus dados regularmente para não perder
             informações ao limpar o cache do navegador.
           </p>

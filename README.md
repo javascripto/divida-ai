@@ -1,4 +1,4 @@
-# Conta Certa
+# Divida aí
 
 Webapp para dividir despesas em grupo (viagens, jantares, repúblicas) — **100% client-side, sem backend**. Todos os dados ficam no `localStorage` do navegador.
 
