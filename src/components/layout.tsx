@@ -84,10 +84,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <Button size="lg" className="w-full rounded-full" onClick={onAddExpense}>
-          <Plus className="size-5" />
-          Nova despesa
-        </Button>
+        {events.length > 0 && (
+          <Button size="lg" className="w-full rounded-full" onClick={onAddExpense}>
+            <Plus className="size-5" />
+            Nova despesa
+          </Button>
+        )}
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
