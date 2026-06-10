@@ -17,7 +17,7 @@ import {
   type PersistedState,
 } from "@/lib/storage"
 
-type Action =
+export type Action =
   | { type: "REPLACE_ALL"; payload: PersistedState }
   | { type: "ADD_EVENT"; payload: AppEvent }
   | { type: "UPDATE_EVENT"; id: string; patch: Partial<AppEvent> }
@@ -38,7 +38,7 @@ function mapEvent(state: PersistedState, id: string, fn: (e: AppEvent) => AppEve
   return { ...state, events: state.events.map((e) => (e.id === id ? touch(fn(e)) : e)) }
 }
 
-function reducer(state: PersistedState, action: Action): PersistedState {
+export function reducer(state: PersistedState, action: Action): PersistedState {
   switch (action.type) {
     case "REPLACE_ALL":
       return action.payload

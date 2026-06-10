@@ -17,5 +17,16 @@ export default defineConfig({
     setupFiles: "./src/test/setup.ts",
     css: true,
     exclude: ["**/node_modules/**", "**/e2e/**"],
+    coverage: {
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/test/**",
+        "src/main.tsx",
+        "src/vite-env.d.ts",
+        "src/lib/types.ts",
+        "src/components/ui/**",
+      ],
+    },
   },
 })

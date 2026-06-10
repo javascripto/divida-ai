@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import {
   clearState,
   defaultSettings,
@@ -74,7 +74,9 @@ describe("newId", () => {
 describe("saveState — resiliência", () => {
   it("não lança quando localStorage está cheio (quota excedida)", () => {
     const original = localStorage.setItem.bind(localStorage)
-    localStorage.setItem = () => { throw new DOMException("QuotaExceededError") }
+    localStorage.setItem = () => {
+      throw new DOMException("QuotaExceededError")
+    }
     expect(() => saveState(seedState())).not.toThrow()
     localStorage.setItem = original
   })
