@@ -25,7 +25,6 @@ import {
   putReceipt,
   blobToBase64,
   base64ToBlob,
-  type ReceiptRecord,
 } from "@/lib/receipt-db"
 import JSZip from "jszip"
 
@@ -98,7 +97,7 @@ export function SettingsPage() {
   const onImportFile = async (file: File) => {
     setImporting(true)
     try {
-      if (file.name.endsWith(".zip") || file.type === "application/zip") {
+      if (file.name.endsWith(".zip")) {
         await importZip(file)
       } else {
         await importJsonFile(file)
@@ -111,52 +110,40 @@ export function SettingsPage() {
     }
   }
 
-  const importJsonFile = (file: File) =>
-    new Promise<void>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onerror = reject
-      reader.onload = async () => {
-        try {
-          const text = String(reader.result)
-          const parsed = JSON.parse(text)
-          if (!Array.isArray(parsed.events)) {
-            toast.error("Arquivo inválido")
-            return resolve()
-          }
-          await clearAllReceipts()
-          // Embed receipts stored as base64
-          if (Array.isArray(parsed.receipts)) {
-            await Promise.all(
-              (parsed.receipts as Array<{
-                id: string; expenseId: string; fileName: string
-                mimeType: string; size: number; data: string
-              }>).map((r) =>
-                putReceipt({
-                  id: r.id,
-                  expenseId: r.expenseId,
-                  fileName: r.fileName,
-                  mimeType: r.mimeType,
-                  size: r.size,
-                  data: base64ToBlob(r.data, r.mimeType),
-                }),
-              ),
-            )
-            const count = parsed.receipts.length
-            delete parsed.receipts
-            if (importJSON(JSON.stringify(parsed)))
-              toast.success(`Dados importados com ${count} recibo(s)`)
-            else toast.error("Arquivo inválido")
-          } else {
-            if (importJSON(text)) toast.success("Dados importados (sem recibos)")
-            else toast.error("Arquivo inválido")
-          }
-          resolve()
-        } catch (e) {
-          reject(e)
-        }
-      }
-      reader.readAsText(file)
-    })
+  const importJsonFile = async (file: File) => {
+    const text = await file.text()
+    const parsed = JSON.parse(text)
+    if (!Array.isArray(parsed.events)) {
+      toast.error("Arquivo inválido")
+      return
+    }
+    await clearAllReceipts()
+    if (Array.isArray(parsed.receipts)) {
+      const b64list = parsed.receipts as Array<{
+        id: string; expenseId: string; fileName: string
+        mimeType: string; size: number; data: string
+      }>
+      await Promise.all(
+        b64list.map((r) =>
+          putReceipt({
+            id: r.id,
+            expenseId: r.expenseId,
+            fileName: r.fileName,
+            mimeType: r.mimeType,
+            size: r.size,
+            data: base64ToBlob(r.data, r.mimeType),
+          }),
+        ),
+      )
+      delete parsed.receipts
+      if (importJSON(JSON.stringify(parsed)))
+        toast.success(`Dados importados com ${b64list.length} recibo(s)`)
+      else toast.error("Arquivo inválido")
+    } else {
+      if (importJSON(text)) toast.success("Dados importados (sem recibos)")
+      else toast.error("Arquivo inválido")
+    }
+  }
 
   const importZip = async (file: File) => {
     const zip = await JSZip.loadAsync(file)
@@ -164,35 +151,49 @@ export function SettingsPage() {
     if (!dataFile) { toast.error("ZIP inválido: data.json não encontrado"); return }
 
     const json = await dataFile.async("text")
-    await clearAllReceipts()
+    const parsed = JSON.parse(json)
 
-    const receiptsFolder = zip.folder("receipts")
-    let count = 0
-    if (receiptsFolder) {
-      const filePromises: Promise<void>[] = []
-      receiptsFolder.forEach((relativePath, zipEntry) => {
-        if (zipEntry.dir) return
-        const id = relativePath.replace(/\.[^.]+$/, "")
-        const mimeType = mimeFromExt(relativePath.split(".").pop() ?? "")
-        filePromises.push(
-          zipEntry.async("blob").then((blob) => {
-            const typedBlob = new Blob([blob], { type: mimeType })
-            return putReceipt({
-              id,
-              expenseId: "",   // will be resolved via the JSON expense receiptIds
-              fileName: relativePath,
-              mimeType,
-              size: typedBlob.size,
-              data: typedBlob,
-            })
-          }),
-        )
-        count++
-      })
-      await Promise.all(filePromises)
+    // Build receiptId → expenseId from the JSON before touching the DB
+    const receiptToExpense = new Map<string, string>()
+    if (Array.isArray(parsed.events)) {
+      for (const ev of parsed.events) {
+        for (const ex of ev.expenses ?? []) {
+          for (const rid of ex.receiptIds ?? []) {
+            receiptToExpense.set(rid, ex.id)
+          }
+        }
+      }
     }
 
-    if (importJSON(json)) toast.success(`Dados importados com ${count} recibo(s)`)
+    await clearAllReceipts()
+
+    // JSZip relativePath inside a folder reference includes the folder prefix —
+    // iterate the whole zip and filter by the receipts/ prefix instead.
+    const filePromises: Promise<void>[] = []
+    zip.forEach((path, entry) => {
+      if (!path.startsWith("receipts/") || entry.dir) return
+      const fileName = path.slice("receipts/".length) // e.g. "abc123.jpg"
+      const id = fileName.replace(/\.[^.]+$/, "")
+      const ext = fileName.split(".").pop() ?? ""
+      const mimeType = mimeFromExt(ext)
+      const expenseId = receiptToExpense.get(id) ?? ""
+      filePromises.push(
+        entry.async("blob").then((blob) =>
+          putReceipt({
+            id,
+            expenseId,
+            fileName,
+            mimeType,
+            size: blob.size,
+            data: new Blob([blob], { type: mimeType }),
+          }),
+        ),
+      )
+    })
+    await Promise.all(filePromises)
+
+    if (importJSON(json))
+      toast.success(`Dados importados com ${filePromises.length} recibo(s)`)
     else toast.error("data.json inválido no ZIP")
   }
 
@@ -283,7 +284,7 @@ export function SettingsPage() {
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json,.zip,application/zip"
+            accept="application/json,.json,.zip,application/zip,application/x-zip-compressed"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0]
