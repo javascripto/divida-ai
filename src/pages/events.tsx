@@ -12,6 +12,7 @@ import { formatMoney, formatDate, relativeTime } from "@/lib/format"
 import { roundMoney } from "@/lib/settlement"
 import type { AppEvent } from "@/lib/types"
 import { toast } from "sonner"
+import { deleteReceiptsByExpenses } from "@/lib/receipt-db"
 
 const statusLabel: Record<AppEvent["status"], string> = {
   open: "ABERTO",
@@ -86,6 +87,7 @@ function EventCard({ event }: { event: AppEvent }) {
         confirmLabel="Excluir"
         destructive
         onConfirm={() => {
+          deleteReceiptsByExpenses(event.expenses.map((e) => e.id))
           dispatch({ type: "DELETE_EVENT", id: event.id })
           toast.success("Evento excluído")
         }}

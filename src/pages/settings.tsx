@@ -1,40 +1,207 @@
 import { useRef, useState } from "react"
-import { Download, Upload, Trash2, Info, Moon } from "lucide-react"
+import { Download, Upload, Trash2, Info, Moon, FileArchive, FileJson, Paperclip } from "lucide-react"
 import { PageHeader } from "@/components/layout"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { useStore } from "@/store/store"
 import { useTheme } from "@/components/theme-provider"
 import { currencyOptions } from "@/lib/format"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import {
+  getAllReceipts,
+  clearAllReceipts,
+  putReceipt,
+  blobToBase64,
+  base64ToBlob,
+  type ReceiptRecord,
+} from "@/lib/receipt-db"
+import JSZip from "jszip"
+
+type ExportMode = "json" | "zip" | "base64"
 
 export function SettingsPage() {
   const { settings, dispatch, exportJSON, importJSON, resetAll } = useStore()
   const { theme, setTheme } = useTheme()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [exportDialog, setExportDialog] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [importing, setImporting] = useState(false)
 
-  const download = () => {
-    const blob = new Blob([exportJSON()], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `divida-ai-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success("Backup exportado")
+  // ── Export ──────────────────────────────────────────────────────────────
+
+  const doExport = async (mode: ExportMode) => {
+    setExporting(true)
+    const dateStr = new Date().toISOString().slice(0, 10)
+    try {
+      if (mode === "json") {
+        download(
+          new Blob([exportJSON()], { type: "application/json" }),
+          `divida-ai-backup-${dateStr}.json`,
+        )
+        toast.success("Backup exportado (sem recibos)")
+      } else if (mode === "base64") {
+        const receipts = await getAllReceipts()
+        const b64Receipts = await Promise.all(
+          receipts.map(async (r) => ({
+            id: r.id,
+            expenseId: r.expenseId,
+            fileName: r.fileName,
+            mimeType: r.mimeType,
+            size: r.size,
+            data: await blobToBase64(r.data),
+          })),
+        )
+        const payload = { ...JSON.parse(exportJSON()), receipts: b64Receipts }
+        download(
+          new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }),
+          `divida-ai-backup-${dateStr}.json`,
+        )
+        toast.success(`Backup exportado com ${receipts.length} recibo(s) em base64`)
+      } else {
+        // ZIP
+        const receipts = await getAllReceipts()
+        const zip = new JSZip()
+        zip.file("data.json", exportJSON())
+        const folder = zip.folder("receipts")!
+        for (const r of receipts) {
+          const ext = extFromMime(r.mimeType) || extFromName(r.fileName)
+          folder.file(`${r.id}${ext ? "." + ext : ""}`, r.data)
+        }
+        const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" })
+        download(blob, `divida-ai-backup-${dateStr}.zip`)
+        toast.success(`Backup exportado com ${receipts.length} recibo(s) em ZIP`)
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Erro ao exportar")
+    } finally {
+      setExporting(false)
+      setExportDialog(false)
+    }
   }
 
-  const onImportFile = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (importJSON(String(reader.result))) toast.success("Dados importados")
-      else toast.error("Arquivo inválido")
+  // ── Import ──────────────────────────────────────────────────────────────
+
+  const onImportFile = async (file: File) => {
+    setImporting(true)
+    try {
+      if (file.name.endsWith(".zip") || file.type === "application/zip") {
+        await importZip(file)
+      } else {
+        await importJsonFile(file)
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Erro ao importar arquivo")
+    } finally {
+      setImporting(false)
     }
-    reader.readAsText(file)
+  }
+
+  const importJsonFile = (file: File) =>
+    new Promise<void>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onerror = reject
+      reader.onload = async () => {
+        try {
+          const text = String(reader.result)
+          const parsed = JSON.parse(text)
+          if (!Array.isArray(parsed.events)) {
+            toast.error("Arquivo inválido")
+            return resolve()
+          }
+          await clearAllReceipts()
+          // Embed receipts stored as base64
+          if (Array.isArray(parsed.receipts)) {
+            await Promise.all(
+              (parsed.receipts as Array<{
+                id: string; expenseId: string; fileName: string
+                mimeType: string; size: number; data: string
+              }>).map((r) =>
+                putReceipt({
+                  id: r.id,
+                  expenseId: r.expenseId,
+                  fileName: r.fileName,
+                  mimeType: r.mimeType,
+                  size: r.size,
+                  data: base64ToBlob(r.data, r.mimeType),
+                }),
+              ),
+            )
+            const count = parsed.receipts.length
+            delete parsed.receipts
+            if (importJSON(JSON.stringify(parsed)))
+              toast.success(`Dados importados com ${count} recibo(s)`)
+            else toast.error("Arquivo inválido")
+          } else {
+            if (importJSON(text)) toast.success("Dados importados (sem recibos)")
+            else toast.error("Arquivo inválido")
+          }
+          resolve()
+        } catch (e) {
+          reject(e)
+        }
+      }
+      reader.readAsText(file)
+    })
+
+  const importZip = async (file: File) => {
+    const zip = await JSZip.loadAsync(file)
+    const dataFile = zip.file("data.json")
+    if (!dataFile) { toast.error("ZIP inválido: data.json não encontrado"); return }
+
+    const json = await dataFile.async("text")
+    await clearAllReceipts()
+
+    const receiptsFolder = zip.folder("receipts")
+    let count = 0
+    if (receiptsFolder) {
+      const filePromises: Promise<void>[] = []
+      receiptsFolder.forEach((relativePath, zipEntry) => {
+        if (zipEntry.dir) return
+        const id = relativePath.replace(/\.[^.]+$/, "")
+        const mimeType = mimeFromExt(relativePath.split(".").pop() ?? "")
+        filePromises.push(
+          zipEntry.async("blob").then((blob) => {
+            const typedBlob = new Blob([blob], { type: mimeType })
+            return putReceipt({
+              id,
+              expenseId: "",   // will be resolved via the JSON expense receiptIds
+              fileName: relativePath,
+              mimeType,
+              size: typedBlob.size,
+              data: typedBlob,
+            })
+          }),
+        )
+        count++
+      })
+      await Promise.all(filePromises)
+    }
+
+    if (importJSON(json)) toast.success(`Dados importados com ${count} recibo(s)`)
+    else toast.error("data.json inválido no ZIP")
+  }
+
+  // ── Reset ───────────────────────────────────────────────────────────────
+
+  const handleReset = async () => {
+    await clearAllReceipts()
+    resetAll()
+    toast.success("Dados restaurados")
   }
 
   return (
@@ -95,14 +262,15 @@ export function SettingsPage() {
             <DataRow
               icon={<Download className="size-5 text-secondary" />}
               title="Exportar dados"
-              subtitle="Baixe tudo como um arquivo .json"
-              onClick={download}
+              subtitle="Baixe tudo como JSON ou ZIP com recibos"
+              onClick={() => setExportDialog(true)}
             />
             <DataRow
               icon={<Upload className="size-5 text-primary" />}
               title="Importar dados"
-              subtitle="Restaure a partir de um backup"
+              subtitle="Restaure a partir de um backup (.json ou .zip)"
               onClick={() => fileRef.current?.click()}
+              loading={importing}
             />
             <DataRow
               icon={<Trash2 className="size-5 text-error" />}
@@ -115,7 +283,7 @@ export function SettingsPage() {
           <input
             ref={fileRef}
             type="file"
-            accept="application/json"
+            accept="application/json,.json,.zip,application/zip"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0]
@@ -138,21 +306,99 @@ export function SettingsPage() {
         </div>
       </Card>
 
+      {/* Export dialog */}
+      <Dialog open={exportDialog} onOpenChange={setExportDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Exportar dados</DialogTitle>
+            <DialogDescription>
+              Escolha o formato de exportação. Os recibos ficam armazenados localmente no navegador e
+              precisam ser incluídos manualmente no backup se quiser preservá-los.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 px-6 pb-2">
+            <ExportOption
+              icon={<FileJson className="size-5 text-secondary" />}
+              title="Só dados (sem recibos)"
+              subtitle="Arquivo .json leve, sem os recibos anexados"
+              disabled={exporting}
+              onClick={() => doExport("json")}
+            />
+            <ExportOption
+              icon={<FileArchive className="size-5 text-primary" />}
+              title="ZIP com recibos"
+              subtitle="data.json + pasta receipts/ compactados — recomendado"
+              disabled={exporting}
+              onClick={() => doExport("zip")}
+            />
+            <ExportOption
+              icon={<Paperclip className="size-5 text-tertiary" />}
+              title="JSON com recibos (base64)"
+              subtitle="Tudo em um único .json — arquivo maior"
+              disabled={exporting}
+              onClick={() => doExport("base64")}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExportDialog(false)} disabled={exporting}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmDialog
         open={confirmReset}
         onOpenChange={setConfirmReset}
         title="Limpar todos os dados?"
-        description="Isso apaga todos os eventos e restaura os dados de exemplo. Esta ação não pode ser desfeita."
+        description="Isso apaga todos os eventos, recibos e restaura os dados de exemplo. Esta ação não pode ser desfeita."
         confirmLabel="Limpar"
         destructive
-        onConfirm={() => {
-          resetAll()
-          toast.success("Dados restaurados")
-        }}
+        onConfirm={handleReset}
       />
     </div>
   )
 }
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function download(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function extFromMime(mime: string): string {
+  const map: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "application/pdf": "pdf",
+  }
+  return map[mime] ?? ""
+}
+
+function extFromName(name: string): string {
+  return name.split(".").pop() ?? ""
+}
+
+function mimeFromExt(ext: string): string {
+  const map: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif",
+    pdf: "application/pdf",
+  }
+  return map[ext.toLowerCase()] ?? "application/octet-stream"
+}
+
+// ── Sub-components ───────────────────────────────────────────────────────────
 
 function DataRow({
   icon,
@@ -160,22 +406,54 @@ function DataRow({
   subtitle,
   onClick,
   danger,
+  loading,
 }: {
   icon: React.ReactNode
   title: string
   subtitle: string
   onClick: () => void
   danger?: boolean
+  loading?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-surface-container"
+      disabled={loading}
+      className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-surface-container disabled:opacity-50"
     >
       {icon}
       <div className="flex-1">
         <p className={danger ? "font-semibold text-error" : "font-semibold"}>{title}</p>
+        <p className="text-xs text-on-surface-variant">{subtitle}</p>
+      </div>
+    </button>
+  )
+}
+
+function ExportOption({
+  icon,
+  title,
+  subtitle,
+  onClick,
+  disabled,
+}: {
+  icon: React.ReactNode
+  title: string
+  subtitle: string
+  onClick: () => void
+  disabled?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center gap-3 rounded-xl border border-outline-variant p-4 text-left transition-colors hover:bg-surface-container-low disabled:opacity-50"
+    >
+      {icon}
+      <div className="flex-1">
+        <p className="font-semibold">{title}</p>
         <p className="text-xs text-on-surface-variant">{subtitle}</p>
       </div>
     </button>

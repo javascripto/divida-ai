@@ -13,6 +13,8 @@ import { useEventSummary } from "@/hooks/use-event-summary"
 import { categoryMeta } from "@/lib/categories"
 import { formatMoney, formatDate } from "@/lib/format"
 import { toast } from "sonner"
+import { ReceiptBadge } from "@/components/receipt-section"
+import { deleteReceiptsByExpense } from "@/lib/receipt-db"
 
 export function ExpensesPage() {
   const { eventId } = useParams()
@@ -107,6 +109,7 @@ export function ExpensesPage() {
                   <span className="flex items-center gap-1">
                     <CalendarDays className="size-3" /> {formatDate(expense.date)}
                   </span>
+                  <ReceiptBadge count={expense.receiptIds?.length ?? 0} />
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
@@ -129,6 +132,7 @@ export function ExpensesPage() {
                     aria-label="Excluir despesa"
                     className="size-8 text-error hover:bg-error-container"
                     onClick={() => {
+                      deleteReceiptsByExpense(expense.id)
                       dispatch({ type: "DELETE_EXPENSE", eventId: event.id, expenseId: expense.id })
                       toast.success("Despesa excluída")
                     }}

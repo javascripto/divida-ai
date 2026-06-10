@@ -13,6 +13,7 @@ export type Expense = {
   category: ExpenseCategory
   date: string // ISO date (yyyy-mm-dd)
   notes?: string
+  receiptIds?: string[]
 }
 
 export type EventStatus = "open" | "closed" | "settled"

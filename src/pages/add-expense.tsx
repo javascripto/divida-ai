@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useNavigate, useParams, Navigate } from "react-router-dom"
-import { ArrowLeft, Save, Check, ScanLine, Users } from "lucide-react"
+import { ArrowLeft, Save, Check, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,8 @@ import { formatMoney } from "@/lib/format"
 import { roundMoney } from "@/lib/settlement"
 import type { Expense, ExpenseCategory } from "@/lib/types"
 import { toast } from "sonner"
+import { ReceiptSection, type ReceiptSectionHandle } from "@/components/receipt-section"
+import { addReceipt, deleteReceipt } from "@/lib/receipt-db"
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -35,6 +37,7 @@ export function AddExpensePage() {
   const [splitBetween, setSplitBetween] = useState<string[]>(
     existing?.splitBetween ?? event?.participants.map((p) => p.id) ?? [],
   )
+  const receiptRef = useRef<ReceiptSectionHandle>(null)
 
   const numericAmount = useMemo(() => {
     const v = parseFloat(amount.replace(",", "."))
@@ -81,14 +84,25 @@ export function AddExpensePage() {
   const toggleSplit = (id: string) =>
     setSplitBetween((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
 
-  const save = () => {
+  const save = async () => {
     if (!description.trim()) return toast.error("Informe uma descrição")
     if (numericAmount <= 0) return toast.error("Informe um valor válido")
     if (!paidBy) return toast.error("Selecione quem pagou")
     if (splitBetween.length === 0) return toast.error("Selecione ao menos um participante na divisão")
 
+    const expenseId = existing?.id ?? newId()
+
+    // Persist receipt changes
+    let receiptIds: string[] = existing?.receiptIds ?? []
+    if (receiptRef.current) {
+      const { keepIds, newFiles, deletedIds } = receiptRef.current.getChanges()
+      await Promise.all([...deletedIds].map(deleteReceipt))
+      const added = await Promise.all(newFiles.map((f) => addReceipt(expenseId, f)))
+      receiptIds = [...keepIds, ...added.map((r) => r.id)]
+    }
+
     const expense: Expense = {
-      id: existing?.id ?? newId(),
+      id: expenseId,
       description: description.trim(),
       amount: roundMoney(numericAmount),
       paidBy,
@@ -96,6 +110,7 @@ export function AddExpensePage() {
       category,
       date,
       notes: notes.trim() || undefined,
+      receiptIds: receiptIds.length > 0 ? receiptIds : undefined,
     }
     dispatch(
       isEdit
@@ -252,11 +267,10 @@ export function AddExpensePage() {
             Cancelar
           </Button>
 
-          <div className="flex flex-col items-center gap-1 rounded-xl border-2 border-dashed border-outline-variant p-6 text-center text-on-surface-variant">
-            <ScanLine className="size-6" />
-            <p className="text-sm font-semibold">Escanear recibo</p>
-            <p className="text-xs">Em breve</p>
-          </div>
+          <Card className="p-5">
+            <h3 className="mb-3 text-sm font-semibold text-primary">Recibos</h3>
+            <ReceiptSection ref={receiptRef} expenseId={existing?.id} />
+          </Card>
         </div>
       </div>
     </div>

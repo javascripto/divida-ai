@@ -59,6 +59,8 @@ function reducer(state: PersistedState, action: Action): PersistedState {
         settledPairs: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        // receipts live in IndexedDB by expenseId; don't share references
+        expenses: structuredClone(src).expenses.map((ex) => ({ ...ex, receiptIds: undefined })),
       }
       return { ...state, events: [copy, ...state.events] }
     }
