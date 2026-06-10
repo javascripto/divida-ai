@@ -1,8 +1,7 @@
-import { useRef } from "react"
-import { Download, Upload, Trash2, Info, Moon, DatabaseBackup } from "lucide-react"
+import { useRef, useState } from "react"
+import { Download, Upload, Trash2, Info, Moon } from "lucide-react"
 import { PageHeader } from "@/components/layout"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,11 +9,13 @@ import { useStore } from "@/store/store"
 import { useTheme } from "@/components/theme-provider"
 import { currencyOptions } from "@/lib/format"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 
 export function SettingsPage() {
   const { settings, dispatch, exportJSON, importJSON, resetAll } = useStore()
   const { theme, setTheme } = useTheme()
   const fileRef = useRef<HTMLInputElement>(null)
+  const [confirmReset, setConfirmReset] = useState(false)
 
   const download = () => {
     const blob = new Blob([exportJSON()], { type: "application/json" })
@@ -108,12 +109,7 @@ export function SettingsPage() {
               title="Limpar todos os dados"
               subtitle="Restaura o app para o estado inicial"
               danger
-              onClick={() => {
-                if (confirm("Isso apaga todos os eventos e restaura os dados de exemplo. Continuar?")) {
-                  resetAll()
-                  toast.success("Dados restaurados")
-                }
-              }}
+              onClick={() => setConfirmReset(true)}
             />
           </div>
           <input
@@ -130,21 +126,6 @@ export function SettingsPage() {
         </Card>
       </div>
 
-      <Card className="mt-6 flex flex-wrap items-center justify-between gap-4 p-6">
-        <div className="flex items-start gap-3">
-          <DatabaseBackup className="size-6 text-primary" />
-          <div>
-            <p className="font-semibold">Backup manual em JSON</p>
-            <p className="text-sm text-on-surface-variant">
-              Tire um instantâneo dos eventos e do histórico de acertos. Recomendado antes de limpar o cache do navegador.
-            </p>
-          </div>
-        </div>
-        <Button onClick={download}>
-          <DatabaseBackup className="size-4" /> Fazer backup agora
-        </Button>
-      </Card>
-
       <Card className="mt-6 flex items-start gap-3 bg-surface-container p-6">
         <Info className="size-5 shrink-0 text-primary" />
         <div>
@@ -156,6 +137,19 @@ export function SettingsPage() {
           </p>
         </div>
       </Card>
+
+      <ConfirmDialog
+        open={confirmReset}
+        onOpenChange={setConfirmReset}
+        title="Limpar todos os dados?"
+        description="Isso apaga todos os eventos e restaura os dados de exemplo. Esta ação não pode ser desfeita."
+        confirmLabel="Limpar"
+        destructive
+        onConfirm={() => {
+          resetAll()
+          toast.success("Dados restaurados")
+        }}
+      />
     </div>
   )
 }

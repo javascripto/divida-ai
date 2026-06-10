@@ -43,9 +43,15 @@ export function ExpensesPage() {
         title="Lista de despesas"
         subtitle="Gerencie e acompanhe todos os custos compartilhados do grupo."
         actions={
-          <Button onClick={() => navigate(`/event/${event.id}/expenses/new`)}>
-            <Plus className="size-4" /> Adicionar despesa
-          </Button>
+          event.participants.length === 0 ? (
+            <Button onClick={() => navigate(`/event/${event.id}/participants`)}>
+              <UsersIcon className="size-4" /> Adicionar participantes
+            </Button>
+          ) : (
+            <Button onClick={() => navigate(`/event/${event.id}/expenses/new`)}>
+              <Plus className="size-4" /> Adicionar despesa
+            </Button>
+          )
         }
       />
 

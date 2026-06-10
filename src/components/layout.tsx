@@ -7,10 +7,12 @@ import {
   HandCoins,
   Settings as SettingsIcon,
   Plus,
+  ChevronLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useStore } from "@/store/store"
+import { toast } from "sonner"
 
 const navItems = [
   { to: "/", label: "Eventos", icon: CalendarDays, end: true },
@@ -18,8 +20,8 @@ const navItems = [
 
 const eventNav = (eventId: string) => [
   { to: `/event/${eventId}`, label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: `/event/${eventId}/expenses`, label: "Despesas", icon: ReceiptText, end: false },
   { to: `/event/${eventId}/participants`, label: "Participantes", icon: Users, end: false },
+  { to: `/event/${eventId}/expenses`, label: "Despesas", icon: ReceiptText, end: false },
   { to: `/event/${eventId}/settlements`, label: "Acertos", icon: HandCoins, end: false },
 ]
 
@@ -41,8 +43,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ]
 
   const onAddExpense = () => {
-    if (activeEventId) navigate(`/event/${activeEventId}/expenses/new`)
-    else navigate("/")
+    if (!activeEventId) return navigate("/")
+    const activeEvent = events.find((e) => e.id === activeEventId)
+    if (activeEvent && activeEvent.participants.length === 0) {
+      toast.info("Adicione participantes ao evento antes de cadastrar despesas")
+      return navigate(`/event/${activeEventId}/participants`)
+    }
+    navigate(`/event/${activeEventId}/expenses/new`)
   }
 
   return (
@@ -86,7 +93,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar mobile */}
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-outline-variant/60 bg-surface/90 px-4 py-3 backdrop-blur md:hidden">
-          <h1 className="text-lg font-bold text-primary">Conta Certa</h1>
+          <NavLink to="/" className="text-lg font-bold text-primary">Conta Certa</NavLink>
           <Button size="sm" onClick={onAddExpense}>
             <Plus className="size-4" /> Despesa
           </Button>
@@ -96,7 +103,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Bottom nav mobile */}
         <nav className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-outline-variant/60 bg-surface/95 px-2 py-2 backdrop-blur md:hidden">
-          {items.slice(0, 5).map((item) => {
+          {(activeEventId
+            ? [...eventNav(activeEventId), { to: "/settings", label: "Configurações", icon: SettingsIcon, end: true }]
+            : [navItems[0], { to: "/settings", label: "Configurações", icon: SettingsIcon, end: true }]
+          ).map((item) => {
             const isActive = item.end
               ? location.pathname === item.to
               : location.pathname.startsWith(item.to)
@@ -126,15 +136,26 @@ export function PageHeader({
   subtitle,
   badge,
   actions,
+  back,
 }: {
   title: React.ReactNode
   subtitle?: string
   badge?: React.ReactNode
   actions?: React.ReactNode
+  back?: { to: string; label: string }
 }) {
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div>
+        {back && (
+          <NavLink
+            to={back.to}
+            className="mb-1 flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary md:hidden"
+          >
+            <ChevronLeft className="size-3.5" />
+            {back.label}
+          </NavLink>
+        )}
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold tracking-tight text-on-surface md:text-3xl">{title}</h2>
           {badge}

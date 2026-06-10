@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input, Textarea } from "@/components/ui/input"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -115,12 +116,12 @@ export function EventFormDialog({
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-1.5">
-              <Label htmlFor="ev-start">Data de início</Label>
-              <Input id="ev-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Label>Data de início</Label>
+              <DatePicker value={startDate} onChange={setStartDate} placeholder="Selecione a data de início" />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="ev-end">Data de fim (opcional)</Label>
-              <Input id="ev-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Label>Data de fim (opcional)</Label>
+              <DatePicker value={endDate} onChange={setEndDate} placeholder="Selecione a data de fim" />
             </div>
           </div>
           <div className="grid gap-1.5">

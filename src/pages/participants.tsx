@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useStore, newId } from "@/store/store"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useEventSummary } from "@/hooks/use-event-summary"
 import { formatMoney } from "@/lib/format"
 import { toast } from "sonner"
@@ -27,6 +28,7 @@ export function ParticipantsPage() {
   const summary = useEventSummary(event)
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState("")
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
 
   if (!event) return <Navigate to="/" replace />
   if (!summary) return null
@@ -91,12 +93,7 @@ export function ParticipantsPage() {
                   variant="ghost"
                   aria-label="Remover participante"
                   className="text-error hover:bg-error-container"
-                  onClick={() => {
-                    if (confirm(`Remover ${participant.name}? As despesas pagas por ele(a) também serão removidas.`)) {
-                      dispatch({ type: "DELETE_PARTICIPANT", eventId: event.id, participantId: b.participantId })
-                      toast.success("Participante removido")
-                    }
-                  }}
+                  onClick={() => setConfirmRemove(b.participantId)}
                 >
                   <Trash2 className="size-4" />
                 </Button>
@@ -154,6 +151,25 @@ export function ParticipantsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {confirmRemove && (() => {
+        const p = event.participants.find((x) => x.id === confirmRemove)
+        return (
+          <ConfirmDialog
+            open={!!confirmRemove}
+            onOpenChange={(v) => !v && setConfirmRemove(null)}
+            title={`Remover ${p?.name ?? "participante"}?`}
+            description="As despesas pagas por ele(a) também serão removidas. Esta ação não pode ser desfeita."
+            confirmLabel="Remover"
+            destructive
+            onConfirm={() => {
+              dispatch({ type: "DELETE_PARTICIPANT", eventId: event.id, participantId: confirmRemove })
+              toast.success("Participante removido")
+              setConfirmRemove(null)
+            }}
+          />
+        )
+      })()}
     </div>
   )
 }

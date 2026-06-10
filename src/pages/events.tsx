@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { EventFormDialog } from "@/components/event-form-dialog"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useStore, newId } from "@/store/store"
 import { formatMoney, formatDate, relativeTime } from "@/lib/format"
 import { roundMoney } from "@/lib/settlement"
@@ -22,6 +23,7 @@ function EventCard({ event }: { event: AppEvent }) {
   const navigate = useNavigate()
   const { dispatch } = useStore()
   const [editing, setEditing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const total = roundMoney(event.expenses.reduce((s, e) => s + e.amount, 0))
 
   return (
@@ -69,18 +71,25 @@ function EventCard({ event }: { event: AppEvent }) {
           variant="ghost"
           aria-label="Excluir"
           className="text-error hover:bg-error-container"
-          onClick={() => {
-            if (confirm(`Excluir o evento "${event.name}"?`)) {
-              dispatch({ type: "DELETE_EVENT", id: event.id })
-              toast.success("Evento excluído")
-            }
-          }}
+          onClick={() => setConfirmDelete(true)}
         >
           <Trash2 className="size-4" />
         </Button>
       </div>
 
       <EventFormDialog open={editing} onOpenChange={setEditing} event={event} />
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={`Excluir "${event.name}"?`}
+        description="Esta ação não pode ser desfeita. Todas as despesas e acertos do evento serão removidos."
+        confirmLabel="Excluir"
+        destructive
+        onConfirm={() => {
+          dispatch({ type: "DELETE_EVENT", id: event.id })
+          toast.success("Evento excluído")
+        }}
+      />
     </Card>
   )
 }

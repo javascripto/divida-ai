@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react"
 import { useNavigate, useParams, Navigate } from "react-router-dom"
-import { ArrowLeft, Save, Check, ScanLine } from "lucide-react"
+import { ArrowLeft, Save, Check, ScanLine, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -43,6 +44,39 @@ export function AddExpensePage() {
   const perPerson = splitBetween.length > 0 ? roundMoney(numericAmount / splitBetween.length) : 0
 
   if (!event) return <Navigate to="/" replace />
+
+  if (event.participants.length === 0) {
+    return (
+      <div className="min-h-screen bg-surface">
+        <header className="flex items-center justify-between border-b border-outline-variant/50 px-5 py-4 md:px-10">
+          <div className="flex items-center gap-3">
+            <Button size="icon" variant="ghost" aria-label="Voltar" onClick={() => navigate(-1)}>
+              <ArrowLeft className="size-5" />
+            </Button>
+            <h1 className="text-xl font-bold">Adicionar despesa</h1>
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">{event.name}</p>
+        </header>
+
+        <div className="mx-auto max-w-xl px-5 py-16 md:px-10">
+          <Card className="flex flex-col items-center gap-4 p-10 text-center">
+            <span className="flex size-14 items-center justify-center rounded-full bg-primary-fixed/40 text-primary">
+              <Users className="size-7" />
+            </span>
+            <div>
+              <h2 className="text-lg font-semibold">Nenhum participante no evento</h2>
+              <p className="mt-1 text-sm text-on-surface-variant">
+                Adicione participantes antes de cadastrar despesas — é preciso saber quem pagou e entre quem dividir.
+              </p>
+            </div>
+            <Button size="lg" onClick={() => navigate(`/event/${event.id}/participants`)}>
+              <Users className="size-4" /> Adicionar participantes
+            </Button>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   const toggleSplit = (id: string) =>
     setSplitBetween((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
@@ -138,8 +172,8 @@ export function AddExpensePage() {
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="date">Data</Label>
-                <Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                <Label>Data</Label>
+                <DatePicker value={date} onChange={setDate} />
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="notes">Notas (opcional)</Label>
@@ -160,35 +194,29 @@ export function AddExpensePage() {
                 <p className="font-semibold text-primary">{formatMoney(perPerson, event.currency)} / cada</p>
               </div>
             </div>
-            {event.participants.length === 0 ? (
-              <p className="text-sm text-on-surface-variant">
-                Nenhum participante. Adicione participantes ao evento primeiro.
-              </p>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-3">
-                {event.participants.map((p) => {
-                  const active = splitBetween.includes(p.id)
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => toggleSplit(p.id)}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-colors",
-                        active ? "border-primary bg-primary-fixed/40" : "border-outline-variant bg-surface-container-low",
-                      )}
-                    >
-                      <Avatar name={p.name} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{p.name}</p>
-                        <p className="text-xs text-on-surface-variant">{active ? "Participando" : "Fora"}</p>
-                      </div>
-                      {active && <Check className="size-4 text-primary" />}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
+            <div className="grid gap-3 sm:grid-cols-3">
+              {event.participants.map((p) => {
+                const active = splitBetween.includes(p.id)
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => toggleSplit(p.id)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-colors",
+                      active ? "border-primary bg-primary-fixed/40" : "border-outline-variant bg-surface-container-low",
+                    )}
+                  >
+                    <Avatar name={p.name} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{p.name}</p>
+                      <p className="text-xs text-on-surface-variant">{active ? "Participando" : "Fora"}</p>
+                    </div>
+                    {active && <Check className="size-4 text-primary" />}
+                  </button>
+                )
+              })}
+            </div>
             <p className="mt-4 text-xs text-on-surface-variant">
               A divisão é feita igualmente entre os selecionados (lógica de rateio do app).
             </p>

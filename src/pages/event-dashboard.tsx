@@ -1,5 +1,5 @@
 import { useNavigate, useParams, Navigate } from "react-router-dom"
-import { Plus, ArrowRight, CheckCircle2, Scale } from "lucide-react"
+import { Plus, ArrowRight, CheckCircle2, Scale, Users } from "lucide-react"
 import { PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -32,11 +32,18 @@ export function EventDashboardPage() {
         title={event.name}
         subtitle="Gerencie as despesas da viagem e os acertos do grupo."
         badge={<Badge variant={event.status}>{statusBadge[event.status]}</Badge>}
+        back={{ to: "/", label: "Eventos" }}
         actions={
           <>
-            <Button onClick={() => navigate(`/event/${event.id}/expenses/new`)}>
-              <Plus className="size-4" /> Adicionar despesa
-            </Button>
+            {event.participants.length === 0 ? (
+              <Button onClick={() => navigate(`/event/${event.id}/participants`)}>
+                <Users className="size-4" /> Adicionar participantes
+              </Button>
+            ) : (
+              <Button onClick={() => navigate(`/event/${event.id}/expenses/new`)}>
+                <Plus className="size-4" /> Adicionar despesa
+              </Button>
+            )}
             <Button variant="tonal" size="icon" aria-label="Participantes" onClick={() => navigate(`/event/${event.id}/participants`)}>
               <Plus className="size-4" />
             </Button>
