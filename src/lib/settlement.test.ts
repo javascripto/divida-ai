@@ -6,6 +6,7 @@ import {
   computeNetBalances,
   computeSettlements,
   roundMoney,
+  settlementPairId,
   simplifyAggregatedTransactions,
   simplifyTransactionsWithDebtPurchase,
 } from "./settlement"
@@ -117,5 +118,65 @@ describe("casos de borda", () => {
       { id: "x", description: "só ele", amount: 50, paidBy: "1", splitBetween: ["1"], category: "other", date: "2023-01-01" },
     ]
     expect(computeSettlements(participants, e)).toEqual([])
+  })
+})
+
+describe("settlementPairId", () => {
+  it("gera o identificador canônico from->to", () => {
+    expect(settlementPairId("2", "1")).toBe("2->1")
+    expect(settlementPairId("A", "B")).toBe("A->B")
+    expect(settlementPairId("alice", "bob")).toBe("alice->bob")
+  })
+})
+
+describe("computeBalances — casos adicionais", () => {
+  it("participante que não pagou nem consumiu tem todos os campos zerados", () => {
+    const partes = [{ id: "1", name: "Alice" }, { id: "2", name: "Bob" }]
+    const e: Expense[] = [
+      { id: "x", description: "test", amount: 100, paidBy: "1", splitBetween: ["1"], category: "other", date: "2023-01-01" },
+    ]
+    const balances = computeBalances(partes, e)
+    const bob = balances.find((b) => b.participantId === "2")!
+    expect(bob.paid).toBe(0)
+    expect(bob.consumed).toBe(0)
+    expect(bob.balance).toBe(0)
+  })
+
+  it("pagador fora do splitBetween não consome nada do gasto", () => {
+    const partes = [{ id: "1", name: "Alice" }, { id: "2", name: "Bob" }]
+    const e: Expense[] = [
+      { id: "x", description: "test", amount: 100, paidBy: "1", splitBetween: ["2"], category: "other", date: "2023-01-01" },
+    ]
+    const balances = computeBalances(partes, e)
+    const alice = balances.find((b) => b.participantId === "1")!
+    expect(alice.paid).toBe(100)
+    expect(alice.consumed).toBe(0)
+    expect(alice.balance).toBe(100)
+  })
+})
+
+describe("computeSettlements — 4 participantes", () => {
+  const partes = [
+    { id: "A", name: "A" }, { id: "B", name: "B" },
+    { id: "C", name: "C" }, { id: "D", name: "D" },
+  ]
+
+  it("com 1 pagador gera exatamente 3 transferências", () => {
+    const e: Expense[] = [
+      { id: "e1", description: "Jantar", amount: 200, paidBy: "A", splitBetween: ["A", "B", "C", "D"], category: "food", date: "2023-01-01" },
+    ]
+    const s = computeSettlements(partes, e)
+    expect(s).toHaveLength(3)
+    expect(s.every((t) => t.to === "A")).toBe(true)
+    expect(roundMoney(s.reduce((acc, t) => acc + t.amount, 0))).toBe(150)
+  })
+
+  it("saldo líquido final sempre soma zero independente do número de pagadores", () => {
+    const e: Expense[] = [
+      { id: "e1", description: "Almoço", amount: 200, paidBy: "A", splitBetween: ["A", "B", "C", "D"], category: "food", date: "2023-01-01" },
+      { id: "e2", description: "Café",   amount: 100, paidBy: "B", splitBetween: ["A", "B", "C", "D"], category: "food", date: "2023-01-01" },
+    ]
+    const net = computeNetBalances(partes, e)
+    expect(roundMoney([...net.values()].reduce((a, b) => a + b, 0))).toBe(0)
   })
 })

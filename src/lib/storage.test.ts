@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   clearState,
   defaultSettings,
   loadState,
+  newId,
   saveState,
   seedState,
 } from "./storage"
@@ -56,5 +57,25 @@ describe("storage (localStorage round-trip)", () => {
     saveState(seedState())
     clearState()
     expect(localStorage.getItem("divida-ai:state:v1")).toBeNull()
+  })
+})
+
+describe("newId", () => {
+  it("gera strings não-vazias", () => {
+    expect(newId().length).toBeGreaterThan(0)
+  })
+
+  it("gera IDs únicos em 1000 chamadas consecutivas", () => {
+    const ids = Array.from({ length: 1000 }, () => newId())
+    expect(new Set(ids).size).toBe(1000)
+  })
+})
+
+describe("saveState — resiliência", () => {
+  it("não lança quando localStorage está cheio (quota excedida)", () => {
+    const original = localStorage.setItem.bind(localStorage)
+    localStorage.setItem = () => { throw new DOMException("QuotaExceededError") }
+    expect(() => saveState(seedState())).not.toThrow()
+    localStorage.setItem = original
   })
 })
