@@ -31,5 +31,10 @@ pnpm-debug.log*
 # Test coverage
 coverage/
 
+# Playwright — artefatos de execução (vídeos, traces, resultados)
+test-results/
+playwright-report/
+e2e/screenshots/
+
 # Playwright MCP validation artifacts
 .playwright-mcp/
