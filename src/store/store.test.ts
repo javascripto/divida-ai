@@ -113,4 +113,34 @@ describe("store reducer", () => {
     expect(result.events).toEqual(initial.events)
     expect(result.events[0]).toBe(initial.events[0])
   })
+
+  it("adiciona, atualiza e exclui eventos", () => {
+    const added = reducer(state({ events: [] }), { type: "ADD_EVENT", payload: event() })
+    const updated = reducer(added, { type: "UPDATE_EVENT", id: "event-1", patch: { name: "Editado" } })
+    const deleted = reducer(updated, { type: "DELETE_EVENT", id: "event-1" })
+    expect(added.events[0].id).toBe("event-1")
+    expect(updated.events[0].name).toBe("Editado")
+    expect(deleted.events).toEqual([])
+  })
+
+  it("adiciona e atualiza participantes", () => {
+    const initial = state({ events: [event({ participants: [] })] })
+    const added = reducer(initial, { type: "ADD_PARTICIPANT", eventId: "event-1", participant: participant("dave") })
+    const updated = reducer(added, {
+      type: "UPDATE_PARTICIPANT", eventId: "event-1", participant: { id: "dave", name: "David" },
+    })
+    expect(updated.events[0].participants).toEqual([{ id: "dave", name: "David" }])
+  })
+
+  it("exclui despesa e atualiza settings", () => {
+    const withoutExpense = reducer(state(), { type: "DELETE_EXPENSE", eventId: "event-1", expenseId: "expense-1" })
+    const withSettings = reducer(withoutExpense, { type: "UPDATE_SETTINGS", patch: { defaultCurrency: "USD" } })
+    expect(withoutExpense.events[0].expenses).toEqual([])
+    expect(withSettings.settings.defaultCurrency).toBe("USD")
+  })
+
+  it("substitui todo o estado", () => {
+    const replacement = state({ events: [] })
+    expect(reducer(state(), { type: "REPLACE_ALL", payload: replacement })).toBe(replacement)
+  })
 })

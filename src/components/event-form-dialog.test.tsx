@@ -11,7 +11,7 @@ vi.mock("@/store/store", () => ({
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 
 const existing: AppEvent = {
-  id: "e1", name: "Antigo", description: "Desc", currency: "USD", status: "closed", createdAt: 1, updatedAt: 1,
+  id: "e1", name: "Antigo", type: "barbecue", description: "Desc", currency: "USD", status: "closed", createdAt: 1, updatedAt: 1,
   participants: [], expenses: [], settledPairs: [],
 }
 
@@ -41,14 +41,20 @@ describe("EventFormDialog", () => {
     render(<EventFormDialog open onOpenChange={onOpenChange} event={existing} />)
     const name = screen.getByLabelText("Nome do evento")
     expect(name).toHaveValue("Antigo")
-    expect(screen.getByRole("button", { name: "Viagem" })).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByRole("button", { name: "Churrasco" })).toHaveAttribute("aria-pressed", "true")
     await user.clear(name)
     await user.type(name, "Atualizado")
+    await user.click(screen.getByRole("button", { name: "Passeio" }))
     await user.click(screen.getByRole("button", { name: "Salvar" }))
     expect(mocks.dispatch).toHaveBeenCalledWith({ type: "UPDATE_EVENT", id: "e1", patch: expect.objectContaining({
-      name: "Atualizado", description: "Desc", currency: "USD", status: "closed",
+      name: "Atualizado", type: "outing", description: "Desc", currency: "USD", status: "closed",
     }) })
     expect(mocks.success).toHaveBeenCalledWith("Evento atualizado")
+  })
+
+  it("usa viagem como tipo padrão para eventos antigos", () => {
+    render(<EventFormDialog open onOpenChange={vi.fn()} event={{ ...existing, type: undefined }} />)
+    expect(screen.getByRole("button", { name: "Viagem" })).toHaveAttribute("aria-pressed", "true")
   })
 
   it("cancela sem despachar", async () => {

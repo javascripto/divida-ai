@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Pencil, Copy, Trash2, Plane } from "lucide-react"
+import { Plus, Pencil, Copy, Trash2 } from "lucide-react"
 import { PageHeader } from "@/components/layout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -13,6 +13,7 @@ import { roundMoney } from "@/lib/settlement"
 import type { AppEvent } from "@/lib/types"
 import { toast } from "sonner"
 import { deleteReceiptsByExpenses } from "@/lib/receipt-db"
+import { getEventType } from "@/lib/event-types"
 
 const statusLabel: Record<AppEvent["status"], string> = {
   open: "ABERTO",
@@ -26,13 +27,19 @@ function EventCard({ event }: { event: AppEvent }) {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const total = roundMoney(event.expenses.reduce((s, e) => s + e.amount, 0))
+  const eventType = getEventType(event.type)
+  const EventIcon = eventType.icon
 
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-xl bg-primary-fixed text-on-primary-fixed-variant">
-            <Plane className="size-5" />
+          <span
+            className="flex size-11 items-center justify-center rounded-xl bg-primary-fixed text-on-primary-fixed-variant"
+            title={eventType.label}
+            aria-label={`Tipo: ${eventType.label}`}
+          >
+            <EventIcon className="size-5" />
           </span>
           <div>
             <h3 className="text-lg font-semibold leading-tight">{event.name}</h3>

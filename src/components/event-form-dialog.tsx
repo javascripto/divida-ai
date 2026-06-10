@@ -14,8 +14,10 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { currencyOptions } from "@/lib/format"
+import { eventTypeOptions } from "@/lib/event-types"
 import { newId, useStore } from "@/store/store"
-import type { AppEvent, EventStatus } from "@/lib/types"
+import type { AppEvent, EventStatus, EventType } from "@/lib/types"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export function EventFormDialog({
@@ -32,6 +34,7 @@ export function EventFormDialog({
   const { dispatch, settings } = useStore()
   const isEdit = !!event
   const [name, setName] = useState("")
+  const [type, setType] = useState<EventType>("travel")
   const [description, setDescription] = useState("")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -41,6 +44,7 @@ export function EventFormDialog({
   useEffect(() => {
     if (open) {
       setName(event?.name ?? "")
+      setType(event?.type ?? "travel")
       setDescription(event?.description ?? "")
       setStartDate(event?.startDate ?? "")
       setEndDate(event?.endDate ?? "")
@@ -58,7 +62,7 @@ export function EventFormDialog({
       dispatch({
         type: "UPDATE_EVENT",
         id: event!.id,
-        patch: { name: name.trim(), description, startDate, endDate, currency, status },
+        patch: { name: name.trim(), type, description, startDate, endDate, currency, status },
       })
       toast.success("Evento atualizado")
     } else {
@@ -66,6 +70,7 @@ export function EventFormDialog({
       const newEvent: AppEvent = {
         id,
         name: name.trim(),
+        type,
         description,
         startDate,
         endDate,
@@ -90,7 +95,7 @@ export function EventFormDialog({
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar evento" : "Novo evento"}</DialogTitle>
           <DialogDescription>
-            Organize as despesas compartilhadas de uma viagem ou jantar.
+            Organize as despesas compartilhadas de qualquer ocasião.
           </DialogDescription>
         </DialogHeader>
 
@@ -105,6 +110,32 @@ export function EventFormDialog({
               autoFocus
             />
           </div>
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-medium">Tipo de evento</legend>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {eventTypeOptions.map((option) => {
+                const Icon = option.icon
+                const selected = type === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setType(option.value)}
+                    className={cn(
+                      "flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition-colors",
+                      selected
+                        ? "border-primary bg-primary-fixed text-on-primary-fixed-variant ring-1 ring-primary"
+                        : "border-outline-variant bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high",
+                    )}
+                  >
+                    <Icon className="size-5" />
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
           <div className="grid gap-1.5">
             <Label htmlFor="ev-desc">Descrição (opcional)</Label>
             <Textarea

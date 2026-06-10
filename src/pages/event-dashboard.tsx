@@ -30,7 +30,7 @@ export function EventDashboardPage() {
     <div>
       <PageHeader
         title={event.name}
-        subtitle="Gerencie as despesas da viagem e os acertos do grupo."
+        subtitle="Gerencie as despesas do evento e os acertos do grupo."
         badge={<Badge variant={event.status}>{statusBadge[event.status]}</Badge>}
         back={{ to: "/", label: "Eventos" }}
         actions={

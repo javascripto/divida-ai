@@ -18,6 +18,8 @@ export type Expense = {
 
 export type EventStatus = "open" | "closed" | "settled"
 
+export type EventType = "travel" | "barbecue" | "party" | "outing" | "other"
+
 export type Settlement = {
   /** Stable id derived from the from/to pair so paid-state survives recalculation. */
   id: string
@@ -30,6 +32,8 @@ export type Settlement = {
 export type AppEvent = {
   id: string
   name: string
+  /** Optional so events persisted before categories were introduced remain valid. */
+  type?: EventType
   description?: string
   startDate?: string
   endDate?: string

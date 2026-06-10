@@ -29,9 +29,10 @@ async function clearState(page: Page) {
   await page.waitForURL("/")
 }
 
-async function createEvent(page: Page, name: string): Promise<string> {
+async function createEvent(page: Page, name: string, type: string): Promise<string> {
   await page.getByRole("button", { name: /Criar evento/i }).first().click()
   await page.getByLabel("Nome do evento").fill(name)
+  await page.getByRole("dialog").getByRole("button", { name: type, exact: true }).click()
   await page.getByRole("dialog").getByRole("button", { name: "Salvar" }).click()
   await page.waitForURL(/\/event\//)
   return page.url().match(/\/event\/([^/?#]+)/)?.[1] ?? ""
@@ -65,6 +66,8 @@ test.describe("Desktop — Jornada completa", () => {
     await test.step("Criar Evento 1: Viagem ao Rio", async () => {
       await page.getByRole("button", { name: /Criar evento/i }).first().click()
       await page.getByLabel("Nome do evento").fill("Viagem ao Rio")
+      await page.getByRole("dialog").getByRole("button", { name: "Viagem", exact: true }).click()
+      await expect(page.getByRole("button", { name: "Viagem", exact: true })).toHaveAttribute("aria-pressed", "true")
       await shot(page, "desktop-02-form-evento1")
       await page.getByRole("dialog").getByRole("button", { name: "Salvar" }).click()
       await page.waitForURL(/\/event\//)
@@ -155,15 +158,17 @@ test.describe("Desktop — Jornada completa", () => {
     })
 
     // ── 8. Editar Evento 1 ────────────────────────────────────────────────────
-    await test.step("Editar nome do Evento 1", async () => {
+    await test.step("Editar nome e tipo do Evento 1", async () => {
       await page.goto("/")
       await page.getByRole("button", { name: /^Editar$/i }).first().click()
       const nameInput = page.getByRole("dialog").getByLabel("Nome do evento")
       await nameInput.clear()
       await nameInput.fill("Viagem ao Rio 2024")
+      await page.getByRole("dialog").getByRole("button", { name: "Festa", exact: true }).click()
       await shot(page, "desktop-14-form-edicao-evento")
       await page.getByRole("dialog").getByRole("button", { name: "Salvar" }).click()
       await expect(page.getByText("Viagem ao Rio 2024")).toBeVisible()
+      await expect(page.getByLabel("Tipo: Festa")).toBeVisible()
       await shot(page, "desktop-15-evento-renomeado")
     })
 
@@ -194,7 +199,7 @@ test.describe("Desktop — Jornada completa", () => {
     // ── 11. Criar Evento 2 ────────────────────────────────────────────────────
     await test.step("Criar Evento 2: Churrasco do Pedro", async () => {
       await page.goto("/")
-      event2Id = await createEvent(page, "Churrasco do Pedro")
+      event2Id = await createEvent(page, "Churrasco do Pedro", "Churrasco")
       await shot(page, "desktop-19-dashboard-evento2")
     })
 
@@ -244,6 +249,8 @@ test.describe("Desktop — Jornada completa", () => {
       await page.goto("/")
       await expect(page.getByText("Viagem ao Rio 2024")).toBeVisible()
       await expect(page.getByText("Churrasco do Pedro")).toBeVisible()
+      await expect(page.getByLabel("Tipo: Festa")).toBeVisible()
+      await expect(page.getByLabel("Tipo: Churrasco")).toBeVisible()
       await shot(page, "desktop-23-lista-dois-eventos")
 
       await page.locator("button", { hasText: /Abrir/ }).nth(0).click()
@@ -352,8 +359,11 @@ test.describe("Mobile — Navegação e fluxo básico", () => {
     let eventId = ""
 
     await test.step("Criar evento no mobile", async () => {
-      eventId = await createEvent(page, "Rolê mobile")
+      eventId = await createEvent(page, "Rolê mobile", "Passeio")
       await expect(page.getByText("Rolê mobile")).toBeVisible()
+      await page.goto("/")
+      await expect(page.getByLabel("Tipo: Passeio")).toBeVisible()
+      await page.goto(`/event/${eventId}`)
       await shot(page, "mobile-02-dashboard-evento")
     })
 
