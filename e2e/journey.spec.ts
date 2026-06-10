@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { test, expect, type Page } from "@playwright/test"
 import path from "path"
 import os from "os"
