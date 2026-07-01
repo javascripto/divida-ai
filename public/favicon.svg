@@ -1,5 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#4648d4"/>
-  <path d="M9 16h14M9 11h14M9 21h9" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="23" cy="21" r="3.5" fill="#6cf8bb"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Divida aí">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="48" x2="416" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6063ee"/>
+      <stop offset="1" stop-color="#4648d4"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="315" y1="284" x2="430" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6cf8bb"/>
+      <stop offset="1" stop-color="#00b978"/>
+    </linearGradient>
+    <filter id="shadow" x="80" y="56" width="360" height="408" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="20" flood-color="#17175f" flood-opacity=".28" stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M96 374c70-26 112-19 171 12 56 30 105 36 166-6v132H96z" fill="#302fb5" opacity=".28"/>
+
+  <g filter="url(#shadow)">
+    <path
+      d="M143 98h226c17.7 0 32 14.3 32 32v242c0 10.6-5.2 20.6-14 26.6L341 430l-45-31.5-45 31.5-45-31.5-45 31.5-32.1-22.5C120.2 401.4 115 391.4 115 380.8V126c0-15.5 12.5-28 28-28z"
+      fill="#fffbff"
+    />
+  </g>
+
+  <path d="M171 167h170" stroke="#4648d4" stroke-linecap="round" stroke-width="28"/>
+  <path d="M171 231h150" stroke="#c7c4d7" stroke-linecap="round" stroke-width="24"/>
+  <path d="M171 290h96" stroke="#c7c4d7" stroke-linecap="round" stroke-width="24"/>
+
+  <circle cx="178" cy="357" r="24" fill="#e1e0ff"/>
+  <circle cx="256" cy="357" r="24" fill="#e1e0ff"/>
+  <path d="M202 357h30" stroke="#4648d4" stroke-linecap="round" stroke-width="16"/>
+  <path d="M255 333v48" stroke="#4648d4" stroke-linecap="round" stroke-width="16"/>
+
+  <circle cx="361" cy="354" r="74" fill="url(#accent)"/>
+  <path d="M326 354h70" stroke="#002113" stroke-linecap="round" stroke-width="24"/>
+  <circle cx="361" cy="322" r="14" fill="#002113"/>
+  <circle cx="361" cy="386" r="14" fill="#002113"/>
+  <path d="M404 300 429 276" stroke="#6cf8bb" stroke-linecap="round" stroke-width="18"/>
+  <path d="M421 321 453 319" stroke="#6cf8bb" stroke-linecap="round" stroke-width="18"/>
 </svg>
